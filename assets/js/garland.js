@@ -149,13 +149,14 @@ function buildSvg({ length, thick, horizontal, seed, uid, k, base }) {
   let ice = '';
   for (let a = 60 * k; a < length; a += 95 * k) {
     if (!free(a, 45 * k)) continue;
-    const baseC = horizontal ? spine(a) + 7 * k : spine(a) + rand(26, 36) * k;
+    // Attaccate al centro del ramo: i rami davanti ne coprono l'attacco.
+    const baseC = horizontal ? spine(a) + 2 * k : spine(a) + rand(-3, 7) * k;
     const count = 2 + Math.floor(R() * 3);
     for (let i = 0; i < count; i++) {
-      const [x, y] = P(a + (horizontal ? i * 5.5 * k : rand(-3, 3) * k), baseC + (horizontal ? 0 : i * 5.5 * k));
+      const [x, y] = P(a + (horizontal ? i * 5.5 * k : rand(-7, 7) * k), baseC + (horizontal ? 0 : i * 5.5 * k));
       const len = rand(18, 38) * k * (i === 1 ? 1.25 : 1);
       const w = rand(4.5, 6.5) * k;
-      ice += `<path d="M${n(x - w / 2)},${n(y)} L${n(x + w / 2)},${n(y)} Q${n(x + w * 0.2)},${n(y + len * 0.6)} ${n(x + 0.3)},${n(y + len)} Q${n(x - w * 0.25)},${n(y + len * 0.55)} ${n(x - w / 2)},${n(y)}Z" fill="url(#${uid}-ice)" stroke="#FFFFFF" stroke-opacity="0.7" stroke-width="0.5"/>`;
+      ice += `<path d="M${n(x - w / 2)},${n(y)} Q${n(x)},${n(y - w * 0.9)} ${n(x + w / 2)},${n(y)} Q${n(x + w * 0.2)},${n(y + len * 0.6)} ${n(x + 0.3)},${n(y + len)} Q${n(x - w * 0.25)},${n(y + len * 0.55)} ${n(x - w / 2)},${n(y)}Z" fill="url(#${uid}-ice)" stroke="#FFFFFF" stroke-opacity="0.7" stroke-width="0.5"/>`;
       ice += `<path d="M${n(x - w * 0.1)},${n(y + 2)} L${n(x)},${n(y + len * 0.7)}" stroke="#FFFFFF" stroke-opacity="0.8" stroke-width="${n(0.7 * k + 0.2)}" stroke-linecap="round"/>`;
     }
   }

@@ -141,7 +141,7 @@ Il CSV contiene gli abbinamenti in chiaro: cancellalo dopo l'invio, dal computer
 | --- | --- |
 | Dati dei partecipanti pubblici su GitHub | Il repository contiene solo codice. I dati vivono nel `localStorage` del browser. Il `.gitignore` esclude anche CSV e backup. |
 | Dati inviati a server esterni | La Content Security Policy (`connect-src 'none'`, `default-src 'none'`) impedisce al sito qualsiasi richiesta di rete. |
-| Tracciamento | Niente analytics, cookie, font o script esterni. |
+| Tracciamento | Niente analytics, cookie, font o script esterni. Il font del logo è ospitato nel sito stesso (`font-src 'self'`). |
 | Indicizzazione | `noindex, nofollow` e nessun referrer inviato. |
 | Furto del backup | Backup facoltativamente cifrato: AES-256-GCM con chiave derivata da PBKDF2-SHA-256 (310.000 iterazioni). |
 | Codice malevolo nei dati | L'interfaccia inserisce i dati solo come testo, mai come HTML. |
@@ -184,19 +184,22 @@ assets/js/mail.js        testo delle mail, link mailto e Outlook, CSV
 assets/js/store.js       salvataggio locale, backup e cifratura
 assets/js/guide.js       pagina Istruzioni
 assets/js/garland.js     ghirlande natalizie in SVG
+assets/fonts/            font del logo (Mountains of Christmas) e sua licenza
 tests/                   test con node --test
 docs/                    screenshot per questo README
 ```
 
-Non ci sono dipendenze esterne e nessun passaggio di build.
+Non ci sono dipendenze esterne né passaggi di build.
 
 ## Decorazioni
+
+In alto c'è il logo "Secret Santa" con un rametto di agrifoglio, scritto con il font natalizio [Mountains of Christmas](https://fonts.google.com/specimen/Mountains+of+Christmas) (licenza Apache 2.0, testo in `assets/fonts/`).
 
 I bordi verticali della pagina hanno ghirlande di pino disegnate in SVG da `assets/js/garland.js`:
 
 - rami di pino su tre livelli di profondità;
 - fiocchi di velluto rosso `#CC0000`;
-- stalattiti e stelle di cristallo;
+- stalattiti di ghiaccio appese al centro dei rami e stelle di cristallo;
 - lucine LED a luce calda, in due gruppi che si alternano con un ritmo costante di 3,2 secondi.
 
 Il disegno usa numeri casuali a seme fisso, quindi è sempre uguale. Si adatta allo schermo:
