@@ -19,6 +19,7 @@ Sito per organizzare uno scambio di regali Secret Santa: estrazione, esclusioni,
 - [Pubblicazione su GitHub Pages](#pubblicazione-su-github-pages)
 - [Sviluppo](#sviluppo)
 - [Struttura del progetto](#struttura-del-progetto)
+- [Design](#design)
 - [Decorazioni](#decorazioni)
 - [Limiti noti](#limiti-noti)
 
@@ -141,7 +142,7 @@ Il CSV contiene gli abbinamenti in chiaro: cancellalo dopo l'invio, dal computer
 | --- | --- |
 | Dati dei partecipanti pubblici su GitHub | Il repository contiene solo codice. I dati vivono nel `localStorage` del browser. Il `.gitignore` esclude anche CSV e backup. |
 | Dati inviati a server esterni | La Content Security Policy (`connect-src 'none'`, `default-src 'none'`) impedisce al sito qualsiasi richiesta di rete. |
-| Tracciamento | Niente analytics, cookie, font o script esterni. Il font del logo è ospitato nel sito stesso (`font-src 'self'`). |
+| Tracciamento | Niente analytics, cookie, font o script esterni. I font sono ospitati nel sito stesso (`font-src 'self'`). |
 | Indicizzazione | `noindex, nofollow` e nessun referrer inviato. |
 | Furto del backup | Backup facoltativamente cifrato: AES-256-GCM con chiave derivata da PBKDF2-SHA-256 (310.000 iterazioni). |
 | Codice malevolo nei dati | L'interfaccia inserisce i dati solo come testo, mai come HTML. |
@@ -177,19 +178,30 @@ GitHub Actions esegue i test a ogni push (`.github/workflows/test.yml`).
 
 ```
 index.html               pagina unica, con la Content Security Policy
-assets/style.css         stile: colore primario #CC0000, tema chiaro e scuro, ghirlande
+assets/style.css         stile: carta crema, colore primario #CC0000, tema chiaro e scuro, ghirlande
 assets/js/app.js         interfaccia: home, evento, routing
 assets/js/draw.js        estrazione, validazione, aggiunte e rimozioni
 assets/js/mail.js        testo delle mail, link mailto e Outlook, CSV
 assets/js/store.js       salvataggio locale, backup e cifratura
 assets/js/guide.js       pagina Istruzioni
 assets/js/garland.js     ghirlande natalizie in SVG
-assets/fonts/            font del logo (Mountains of Christmas) e sua licenza
+assets/fonts/            font (Mountains of Christmas, Fraunces, Figtree) e licenze
 tests/                   test con node --test
 docs/                    screenshot per questo README
 ```
 
 Non ci sono dipendenze esterne né passaggi di build.
+
+## Design
+
+- **Sfondo:** carta ruvida color crema caldo (`#EFDDBD`), con grana, fibre e macchie generate in SVG dentro il CSS, senza immagini da scaricare. In tema scuro diventa carta color caffè.
+- **Schede:** carta più chiara con angoli arrotondati e ombre morbide.
+- **Colore primario:** `#CC0000`, per pulsanti, numeri delle sezioni e logo.
+- **Font:**
+  - [Fraunces](https://fonts.google.com/specimen/Fraunces) per i titoli: un serif morbido che richiama la carta stampata;
+  - [Figtree](https://fonts.google.com/specimen/Figtree) per il testo: un sans moderno e leggibile;
+  - [Mountains of Christmas](https://fonts.google.com/specimen/Mountains+of+Christmas) per il logo.
+- **Licenze:** Fraunces e Figtree sono sotto SIL Open Font License 1.1, Mountains of Christmas sotto Apache 2.0. Tutti i font sono ospitati nel sito (`assets/fonts/`, con le licenze).
 
 ## Decorazioni
 
