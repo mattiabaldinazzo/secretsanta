@@ -1,0 +1,4 @@
+node_modules/
+*.csv
+secretsanta-*.json
+.DS_Store
