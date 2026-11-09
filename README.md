@@ -32,7 +32,7 @@ Sito per organizzare uno scambio di regali Secret Santa: estrazione, esclusioni,
 | Aggiunte dell'ultimo minuto | La persona nuova entra nel giro già estratto. Va rifatta una sola mail esistente. |
 | Rimozioni dell'ultimo minuto | Il giro si ricollega da solo. Va rifatta una sola mail, al massimo due. |
 | Modifica manuale | L'admin cambia gli abbinamenti e il sito controlla in tempo reale che siano validi. |
-| Invio mail | Programma di posta del computer, Outlook.com, Outlook Microsoft 365 oppure CSV per uno strumento di mail delivery. |
+| Invio mail | Testo semplice (programma di posta, Outlook.com, Outlook 365) oppure HTML decorato in stile sito come file .eml. CSV per strumenti di mail delivery. |
 | Stato delle mail | Da inviare, da aggiornare, inviata. Il sito sa quali mail sono cambiate dopo l'invio. |
 | Testo personalizzabile | Oggetto e testo con segnaposto: `{nome}`, `{destinatario}`, `{evento}`, `{data}`, `{luogo}`, `{budget}`, `{messaggio}`, `{organizzatore}`. |
 | Backup | File JSON, anche cifrato con password (AES-256-GCM). Serve per cambiare computer o browser. |
@@ -110,6 +110,43 @@ Il sito non invia mail da solo: non ha un server. Prepara ogni mail e la apre ne
 | Outlook Microsoft 365 | Si apre `outlook.office.com` con la mail compilata. Per account di lavoro o scuola. |
 | Strumento di mail delivery | Esporti un CSV e lo importi in qualsiasi servizio per newsletter o invii massivi. |
 
+### Mail HTML decorata
+
+Nella sezione Invio mail scegli il formato: **testo semplice** oppure **HTML decorato**.
+
+La versione HTML ha lo stesso stile del sito:
+
+- carta crema con trama;
+- ghirlande di pino in alto, in basso e ai lati, con fiocchi, stalattiti, stelle e lucine;
+- logo "Secret Santa" con l'agrifoglio;
+- testo in corsivo a penna ([Dancing Script](https://fonts.google.com/specimen/Dancing+Script), licenza OFL 1.1), con il nome del destinatario del regalo grande e in rosso.
+
+I link `mailto:` e quelli di Outlook sul web accettano solo testo, quindi la versione HTML si invia come **file .eml**, uno per persona:
+
+| Programma | Come si invia |
+| --- | --- |
+| Outlook per Windows | doppio clic sul file: si apre la bozza pronta (intestazione `X-Unsent: 1`), premi Invia |
+| Apple Mail | apri il file, poi Messaggio > Invia di nuovo |
+| Outlook sul web, Gmail | non aprono i file .eml: usa il formato testo |
+
+Come è fatta la mail:
+
+- HTML a tabelle con stili in linea, il formato che i programmi di posta interpretano meglio.
+- Immagini incorporate nella mail come allegati inline (CID): niente immagini da scaricare da internet, si vedono anche offline.
+- Font incorporato nella mail. Se un programma lo ignora, il testo ripiega su Segoe Script (corsivo di Windows), poi su Georgia. Per Outlook per Windows c'è una regola dedicata.
+- Parte di solo testo inclusa per i programmi che non mostrano l'HTML.
+- Peso di circa 440 KB per mail, quasi tutto grafica.
+
+Le immagini (ghirlande, logo, trama della carta) vengono generate dalle stesse ghirlande SVG del sito con:
+
+```
+node tools/build-mail-assets.cjs
+```
+
+Lo script usa Playwright e scrive `assets/js/mail-assets.js`. Va rieseguito solo se cambi le decorazioni.
+
+Con "Anteprima HTML" il sito apre `anteprima.html`, che mostra la mail come la riceverà la persona. I dati vengono letti dal browser, come nel resto del sito.
+
 ### Stato delle mail
 
 Quando apri una mail il sito salva un'impronta (hash) del testo. Se dopo l'invio cambia qualcosa (destinatario, data, luogo, testo), l'impronta non corrisponde più e la mail diventa **da aggiornare**. Così, dopo un'aggiunta all'ultimo minuto, vedi subito le 2 mail da inviare.
@@ -134,7 +171,7 @@ Nello strumento hai due strade:
 - collegare le colonne ai campi personalizzati e usarli nel modello della mail;
 - usare direttamente le colonne `oggetto` e `testo`.
 
-Il CSV contiene gli abbinamenti in chiaro: cancellalo dopo l'invio, dal computer e dallo strumento.
+Il CSV e i file .eml contengono gli abbinamenti in chiaro: cancellali dopo l'invio, dal computer e dallo strumento.
 
 ## Privacy e sicurezza
 
@@ -166,7 +203,7 @@ Ogni push su `main` aggiorna il sito automaticamente. Il file `.nojekyll` disatt
 Servono Node 20 o superiore (solo per i test) e Python 3 (per il server locale).
 
 ```
-npm test     # 22 test della logica con node --test
+npm test     # 27 test della logica con node --test
 npm start    # server locale su http://localhost:8080
 ```
 
@@ -182,10 +219,15 @@ assets/style.css         stile: carta crema, colore primario #CC0000, tema chiar
 assets/js/app.js         interfaccia: home, evento, routing
 assets/js/draw.js        estrazione, validazione, aggiunte e rimozioni
 assets/js/mail.js        testo delle mail, link mailto e Outlook, CSV
+assets/js/mail-html.js   mail HTML decorata e file .eml
+assets/js/mail-assets.js immagini e font della mail (generato)
+assets/js/preview.js     anteprima della mail HTML
+anteprima.html           pagina dell'anteprima
+tools/                   generatore delle immagini della mail
 assets/js/store.js       salvataggio locale, backup e cifratura
 assets/js/guide.js       pagina Istruzioni
 assets/js/garland.js     ghirlande natalizie in SVG
-assets/fonts/            font (Mountains of Christmas, Fraunces, Figtree) e licenze
+assets/fonts/            font (Mountains of Christmas, Fraunces, Figtree, Dancing Script) e licenze
 tests/                   test con node --test
 docs/                    screenshot per questo README
 ```

@@ -106,6 +106,21 @@ const SECTIONS = [
         "{evento}, {data}, {luogo}, {budget}, {messaggio}, {organizzatore}: i dettagli dell'evento",
       ]],
       ['p', 'Le righe con un segnaposto vuoto spariscono. "Ripristina il testo predefinito" torna al testo iniziale.'],
+      ['h3', 'Mail in testo semplice o HTML decorato'],
+      ['p', 'In "Formato della mail" scegli come sarà la mail:'],
+      ['ul', [
+        'Testo semplice: leggera e compatibile con tutti i programmi. Si apre con il tuo programma di posta o con Outlook nel browser.',
+        'HTML decorato: ha lo stesso stile del sito, con carta crema, ghirlande di pino ai bordi, logo e testo in corsivo a penna (font Dancing Script). Il nome della persona a cui fare il regalo compare grande e in rosso.',
+      ]],
+      ['p', 'Con l\'HTML decorato scarichi un file .eml per ogni persona. Il file contiene già destinatario, oggetto, testo e immagini:'],
+      ['ul', [
+        'Outlook per Windows: doppio clic sul file, si apre la bozza pronta. Premi Invia.',
+        'Mac: apri il file con Apple Mail e scegli Messaggio > Invia di nuovo.',
+        'Outlook sul web e Gmail non aprono i file .eml: per loro usa il testo semplice.',
+      ]],
+      ['p', 'Con "Anteprima HTML" vedi la mail come la riceverà la persona. "Scarica tutte le .eml da inviare" scarica un file per ogni mail ancora da inviare.'],
+      ['p', 'Il corsivo a penna compare in Apple Mail, sull\'iPhone e in Thunderbird. Outlook per Windows usa un corsivo di sistema simile (Segoe Script), Gmail un carattere standard. Il resto della grafica resta uguale.'],
+      ['tip', 'I file .eml contengono il nome del destinatario del regalo: cancellali dopo l\'invio.'],
       ['h3', 'Invio con uno strumento di mail delivery'],
       ['p', 'Con molti partecipanti puoi inviare tutte le mail insieme da uno strumento di mail delivery, cioè un servizio per newsletter o invii massivi.'],
       ['ol', [

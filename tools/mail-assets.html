@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <title>Decorazioni per la mail</title>
+  <style>
+    @font-face {
+      font-family: "Mountains of Christmas";
+      src: url("../assets/fonts/mountains-of-christmas-700.woff2") format("woff2");
+      font-weight: 700;
+    }
+    body { margin: 0; padding: 20px; background: transparent; }
+    #top, #bottom, #sideL, #sideR { background: #EFDDBD; line-height: 0; }
+    .item { display: inline-block; margin: 0 20px 20px 0; vertical-align: top; }
+    .mirror { transform: scaleX(-1); }
+    #logo { display: inline-flex; align-items: center; gap: 8px; padding: 4px 6px; color: #CC0000; }
+    #logo svg { width: 52px; height: 44px; }
+    #logo .r { transform: scaleX(-1); }
+    #logo span {
+      font-family: "Mountains of Christmas", cursive; font-weight: 700; font-size: 50px; line-height: 1;
+      text-shadow: 0 2px 0 rgba(80, 30, 10, 0.1);
+    }
+    #paper {
+      width: 300px; height: 300px; background-color: #FBF2E1;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.36 0 0 0 0 0.22 0 0 0 0 0.08 0 0 0 0.14 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+    }
+    #page {
+      width: 240px; height: 240px; background-color: #EFDDBD;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.36 0 0 0 0 0.22 0 0 0 0 0.08 0 0 0 0.16 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+    }
+  </style>
+</head>
+<body>
+  <div class="item" id="top"></div>
+  <div class="item" id="bottom"></div>
+  <div class="item" id="sideL"></div>
+  <div class="item mirror" id="sideR"></div>
+  <div class="item" id="logo">
+    <svg viewBox="0 0 52 44" aria-hidden="true">
+      <g transform="translate(26 26) rotate(-155)"><path d="M0,0 C4,-5 7,-3 9,-8 C11,-3 15,-5 17,-9 C18,-4 21,-3 25,0 C21,3 18,4 17,9 C15,5 11,3 9,8 C7,3 4,5 0,0Z" fill="#1F5C30"/><path d="M1,0 L23,0" stroke="#3E8A50" stroke-width="1" stroke-linecap="round"/></g>
+      <g transform="translate(26 26) rotate(-25)"><path d="M0,0 C4,-5 7,-3 9,-8 C11,-3 15,-5 17,-9 C18,-4 21,-3 25,0 C21,3 18,4 17,9 C15,5 11,3 9,8 C7,3 4,5 0,0Z" fill="#2A6E3A"/><path d="M1,0 L23,0" stroke="#4E9A5E" stroke-width="1" stroke-linecap="round"/></g>
+      <circle cx="21.5" cy="29" r="4.6" fill="#CC0000"/><circle cx="30.5" cy="29" r="4.6" fill="#B30000"/><circle cx="26" cy="22.5" r="4.6" fill="#CC0000"/>
+      <circle cx="24.6" cy="21.2" r="1.4" fill="#FFFFFF" fill-opacity="0.7"/><circle cx="20.1" cy="27.7" r="1.4" fill="#FFFFFF" fill-opacity="0.7"/><circle cx="29.1" cy="27.7" r="1.4" fill="#FFFFFF" fill-opacity="0.6"/>
+    </svg>
+    <span>Secret Santa</span>
+    <svg class="r" viewBox="0 0 52 44" aria-hidden="true">
+      <g transform="translate(26 26) rotate(-155)"><path d="M0,0 C4,-5 7,-3 9,-8 C11,-3 15,-5 17,-9 C18,-4 21,-3 25,0 C21,3 18,4 17,9 C15,5 11,3 9,8 C7,3 4,5 0,0Z" fill="#1F5C30"/><path d="M1,0 L23,0" stroke="#3E8A50" stroke-width="1" stroke-linecap="round"/></g>
+      <g transform="translate(26 26) rotate(-25)"><path d="M0,0 C4,-5 7,-3 9,-8 C11,-3 15,-5 17,-9 C18,-4 21,-3 25,0 C21,3 18,4 17,9 C15,5 11,3 9,8 C7,3 4,5 0,0Z" fill="#2A6E3A"/><path d="M1,0 L23,0" stroke="#4E9A5E" stroke-width="1" stroke-linecap="round"/></g>
+      <circle cx="21.5" cy="29" r="4.6" fill="#CC0000"/><circle cx="30.5" cy="29" r="4.6" fill="#B30000"/><circle cx="26" cy="22.5" r="4.6" fill="#CC0000"/>
+      <circle cx="24.6" cy="21.2" r="1.4" fill="#FFFFFF" fill-opacity="0.7"/><circle cx="20.1" cy="27.7" r="1.4" fill="#FFFFFF" fill-opacity="0.7"/><circle cx="29.1" cy="27.7" r="1.4" fill="#FFFFFF" fill-opacity="0.6"/>
+    </svg>
+  </div>
+  <div class="item" id="paper"></div>
+  <div class="item" id="page"></div>
+  <script type="module">
+    import { buildSvg } from '../assets/js/garland.js';
+    const put = (id, opts) => { document.getElementById(id).innerHTML = buildSvg(opts); };
+    put('top', { length: 640, thick: 70, horizontal: true, seed: 7, uid: 'mt', k: 0.6, base: 26 });
+    put('bottom', { length: 640, thick: 70, horizontal: true, seed: 13, uid: 'mb', k: 0.6, base: 26 });
+    put('sideL', { length: 900, thick: 52, horizontal: false, seed: 11, uid: 'ml', k: 0.48, base: 20 });
+    put('sideR', { length: 900, thick: 52, horizontal: false, seed: 29, uid: 'mr', k: 0.48, base: 20 });
+    document.fonts.ready.then(() => { document.body.dataset.ready = '1'; });
+  </script>
+</body>
+</html>

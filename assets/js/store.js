@@ -24,7 +24,7 @@ export function blankEvent() {
     participants: [],
     assignments: null,
     drawnAt: null,
-    mail: { subject: DEFAULT_SUBJECT, body: DEFAULT_BODY, client: 'mailto' },
+    mail: { subject: DEFAULT_SUBJECT, body: DEFAULT_BODY, client: 'mailto', format: 'text' },
     createdAt: now,
     updatedAt: now,
     lastBackupAt: null,
@@ -55,6 +55,7 @@ export function normalizeEvent(raw) {
       subject: raw.mail && typeof raw.mail.subject === 'string' ? raw.mail.subject : DEFAULT_SUBJECT,
       body: raw.mail && typeof raw.mail.body === 'string' ? raw.mail.body : DEFAULT_BODY,
       client: raw.mail && typeof raw.mail.client === 'string' ? raw.mail.client : 'mailto',
+      format: raw.mail && raw.mail.format === 'html' ? 'html' : 'text',
     },
   };
   ev.participants = raw.participants

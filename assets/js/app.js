@@ -1,7 +1,7 @@
 // Interfaccia. Tutti i dati restano nel localStorage di questo browser.
 import { draw, countCycles, validateAssignments, insertParticipant, removeFromAssignments } from './draw.js';
 import {
-  DEFAULT_SUBJECT, DEFAULT_BODY, PLACEHOLDERS, CLIENTS,
+  DEFAULT_SUBJECT, DEFAULT_BODY, PLACEHOLDERS, CLIENTS, MAIL_FORMATS,
   buildMail, mailHash, composeUrl, deliveryCsv, isValidEmail, formatDate,
 } from './mail.js';
 import { loadEvents, saveEvents, blankEvent, newId, exportBackup, parseBackup, decryptBackup } from './store.js';
@@ -726,18 +726,41 @@ function renderEditor(ev) {
 
 // 05 Invio mail
 
-function renderMailSetup(ev) {
-  const clientSel = h('select', {
-    class: 'input',
-    onchange: (e) => { ev.mail.client = e.target.value; persist(ev); refresh('mailsetup'); },
-  }, CLIENTS.map(([v, label]) => h('option', { value: v }, label)));
-  clientSel.value = ev.mail.client;
+const isHtml = (ev) => ev.mail.format === 'html';
 
-  const clientHint = {
-    mailto: 'Si apre il programma di posta predefinito del computer con la mail già scritta. Controlla e premi Invia.',
-    'outlook-live': 'Si apre Outlook.com in una nuova scheda con la mail già scritta. Devi essere connesso al tuo account.',
-    'outlook-365': 'Si apre Outlook sul web del tuo account di lavoro o scuola con la mail già scritta.',
-  }[ev.mail.client] || '';
+function renderMailSetup(ev) {
+  const formatSel = h('div', { class: 'segmented', role: 'radiogroup', 'aria-label': 'Formato della mail' },
+    MAIL_FORMATS.map(([v, label]) => h('button', {
+      type: 'button', role: 'radio', 'aria-checked': String(ev.mail.format === v),
+      class: `segment${ev.mail.format === v ? ' is-active' : ''}`,
+      onclick: () => { ev.mail.format = v; persist(ev); refresh('mailsetup', 'mail'); },
+    }, label)));
+
+  const formatHint = isHtml(ev)
+    ? 'La mail ha lo stesso stile del sito: carta crema, ghirlande ai bordi e testo in corsivo a penna. Per ogni persona scarichi un file .eml: con doppio clic si apre in Outlook come nuovo messaggio già compilato. Controlla e premi Invia.'
+    : 'Mail di solo testo, leggera e compatibile con qualsiasi programma di posta.';
+
+  const nodes = [h('div', { class: 'field' }, h('span', { class: 'label' }, 'Formato della mail'), formatSel, h('span', { class: 'field-hint' }, formatHint))];
+
+  if (!isHtml(ev)) {
+    const clientSel = h('select', {
+      class: 'input',
+      onchange: (e) => { ev.mail.client = e.target.value; persist(ev); refresh('mailsetup'); },
+    }, CLIENTS.map(([v, label]) => h('option', { value: v }, label)));
+    clientSel.value = ev.mail.client;
+    const clientHint = {
+      mailto: 'Si apre il programma di posta predefinito del computer con la mail già scritta. Controlla e premi Invia.',
+      'outlook-live': 'Si apre Outlook.com in una nuova scheda con la mail già scritta. Devi essere connesso al tuo account.',
+      'outlook-365': 'Si apre Outlook sul web del tuo account di lavoro o scuola con la mail già scritta.',
+    }[ev.mail.client] || '';
+    nodes.push(h('div', { class: 'grid-2' }, field('Come invii le mail', clientSel), h('p', { class: 'hint align-end' }, clientHint)));
+  } else {
+    nodes.push(h('ul', { class: 'plain-list hint' },
+      h('li', {}, 'Outlook per Windows: doppio clic sul file, si apre la bozza pronta. Premi Invia.'),
+      h('li', {}, 'Mac: apri il file con Apple Mail e scegli Messaggio > Invia di nuovo.'),
+      h('li', {}, 'Outlook sul web e Gmail non aprono i file .eml: per loro usa il formato testo semplice.'),
+      h('li', {}, 'Il corsivo a penna compare in Apple Mail, iPhone e Thunderbird. Outlook per Windows usa un corsivo di sistema simile, Gmail un carattere standard.')));
+  }
 
   const subject = h('input', { class: 'input', value: ev.mail.subject, maxlength: 200 });
   const body = h('textarea', { class: 'input mono', rows: 12, value: ev.mail.body, maxlength: 4000 });
@@ -746,13 +769,19 @@ function renderMailSetup(ev) {
   subject.addEventListener('change', () => refresh('mail'));
   body.addEventListener('change', () => refresh('mail'));
 
+  const sample = ev.assignments ? ev.participants.find((p) => ev.assignments[p.id]) : null;
   const details = h('details', { class: 'template', open: ui.templateOpen },
     h('summary', {}, 'Testo della mail'),
     field('Oggetto', subject),
     field('Testo', body),
     h('p', { class: 'field-hint' }, 'Segnaposto: ', PLACEHOLDERS.map(([k, label], i) => [i ? ', ' : '', h('code', {}, `{${k}}`), ` ${label}`])),
-    h('p', { class: 'field-hint' }, 'Le righe con un segnaposto vuoto (es. luogo non indicato) spariscono dalla mail. Se cambi il testo dopo aver inviato, le mail risultano da aggiornare.'),
+    h('p', { class: 'field-hint' }, 'Le righe con un segnaposto vuoto (es. luogo non indicato) spariscono dalla mail. Nella versione HTML il nome della persona a cui fare il regalo compare grande e in rosso. Se cambi il testo dopo aver inviato, le mail risultano da aggiornare.'),
     h('div', { class: 'actions' },
+      isHtml(ev) ? h('button', {
+        class: 'btn btn-small btn-outline', type: 'button', disabled: !sample,
+        title: sample ? '' : "Disponibile dopo l'estrazione",
+        onclick: () => openPreview(ev, sample),
+      }, sample ? `Anteprima HTML (${sample.name})` : "Anteprima HTML dopo l'estrazione") : null,
       h('button', {
         class: 'btn btn-small', type: 'button',
         onclick: () => {
@@ -764,16 +793,20 @@ function renderMailSetup(ev) {
         },
       }, 'Ripristina il testo predefinito')));
   details.addEventListener('toggle', () => { ui.templateOpen = details.open; });
-
-  return [h('div', { class: 'grid-2' }, field('Come invii le mail', clientSel), h('p', { class: 'hint align-end' }, clientHint)), details];
+  nodes.push(details);
+  return nodes;
 }
 
 function renderMailList(ev) {
   if (!ev.assignments) return h('p', { class: 'muted' }, "Fai prima l'estrazione: qui compare l'elenco delle mail da inviare.");
+  const html = isHtml(ev);
   const states = ev.participants.map((p) => ({ p, state: mailState(ev, p) }));
   const count = (s) => states.filter((x) => x.state === s).length;
   const todo = states.filter((x) => x.state === 'pending' || x.state === 'outdated');
   const stat = (label, n, cls) => h('div', { class: `stat ${cls}` }, h('span', { class: 'stat-n' }, String(n)), h('span', { class: 'stat-l' }, label));
+  const nextLabel = todo.length
+    ? (html ? `Scarica la prossima: ${todo[0].p.name}` : `Apri la prossima: ${todo[0].p.name}`)
+    : 'Tutte le mail risultano inviate';
   return [
     h('div', { class: 'stats' },
       stat('Da inviare', count('pending'), 'stat-pending'),
@@ -782,26 +815,35 @@ function renderMailList(ev) {
     h('div', { class: 'actions' },
       h('button', {
         class: 'btn btn-primary', type: 'button', disabled: !todo.length,
-        onclick: () => openMail(ev, todo[0].p),
-      }, todo.length ? `Apri la prossima: ${todo[0].p.name}` : 'Tutte le mail risultano inviate'),
+        onclick: () => sendOne(ev, todo[0].p),
+      }, nextLabel),
+      html ? h('button', {
+        class: 'btn', type: 'button', disabled: todo.length < 2,
+        onclick: () => downloadAllEml(ev, todo.map((x) => x.p)),
+      }, `Scarica tutte le .eml da inviare (${todo.length})`) : null,
       h('button', { class: 'btn', type: 'button', disabled: !todo.length, onclick: () => exportCsv(ev, todo.map((x) => x.p)) }, 'Esporta CSV: solo da inviare'),
       h('button', { class: 'btn', type: 'button', onclick: () => exportCsv(ev, states.filter((x) => x.state !== 'none').map((x) => x.p)) }, 'Esporta CSV: tutte')),
-    h('p', { class: 'field-hint' }, 'Quando apri una mail il sito la segna come inviata. Se poi non la invii, usa "Segna da inviare". Il CSV serve per inviare tutte le mail insieme da uno strumento di mail delivery: una riga per persona, con destinatario e testo già pronti.'),
+    h('p', { class: 'field-hint' }, html
+      ? 'Quando scarichi una mail il sito la segna come inviata. Se poi non la invii, usa "Segna da inviare". Il CSV serve per inviare tutte le mail insieme da uno strumento di mail delivery.'
+      : 'Quando apri una mail il sito la segna come inviata. Se poi non la invii, usa "Segna da inviare". Il CSV serve per inviare tutte le mail insieme da uno strumento di mail delivery: una riga per persona, con destinatario e testo già pronti.'),
     h('ul', { class: 'mail-list' }, states.map(({ p, state }) => mailRow(ev, p, state))),
   ];
 }
 
 function mailRow(ev, p, state) {
   const m = buildMail(ev, p);
+  const html = isHtml(ev);
+  const openLabel = html ? (state === 'sent' ? 'Scarica di nuovo' : 'Scarica .eml') : (state === 'sent' ? 'Riapri' : 'Apri mail');
   return h('li', { class: 'mail-row' },
     h('div', { class: 'mail-who' }, h('strong', {}, p.name), h('span', { class: 'muted' }, p.email)),
     h('span', { class: `badge badge-${state}` }, STATE_LABEL[state]),
     h('div', { class: 'mail-actions' },
-      m ? h('button', { class: 'btn btn-small btn-outline', type: 'button', onclick: () => openMail(ev, p) }, state === 'sent' ? 'Riapri' : 'Apri mail') : null,
-      m ? h('button', { class: 'btn btn-small', type: 'button', onclick: () => copyMail(m) }, 'Copia') : null,
+      m ? h('button', { class: 'btn btn-small btn-outline', type: 'button', onclick: () => sendOne(ev, p) }, openLabel) : null,
+      m && html ? h('button', { class: 'btn btn-small', type: 'button', onclick: () => openPreview(ev, p) }, 'Anteprima HTML') : null,
+      m ? h('button', { class: 'btn btn-small', type: 'button', onclick: () => copyMail(m) }, 'Copia testo') : null,
       m && state !== 'sent' ? h('button', { class: 'btn btn-small', type: 'button', onclick: () => markSent(ev, p, true) }, 'Segna inviata') : null,
       state === 'sent' ? h('button', { class: 'btn btn-small', type: 'button', onclick: () => markSent(ev, p, false) }, 'Segna da inviare') : null),
-    m ? h('details', { class: 'preview' }, h('summary', {}, 'Anteprima'), h('pre', {}, `A: ${m.to}\nOggetto: ${m.subject}\n\n${m.body}`)) : null);
+    m ? h('details', { class: 'preview' }, h('summary', {}, 'Anteprima testo'), h('pre', {}, `A: ${m.to}\nOggetto: ${m.subject}\n\n${m.body}`)) : null);
 }
 
 function markSent(ev, p, sent) {
@@ -811,12 +853,17 @@ function markSent(ev, p, sent) {
   refresh('mail');
 }
 
+function sendOne(ev, p) {
+  if (isHtml(ev)) downloadEml(ev, p);
+  else openMail(ev, p);
+}
+
 function openMail(ev, p) {
   const m = buildMail(ev, p);
   if (!m) return;
   const url = composeUrl(m, ev.mail.client);
   if (ev.mail.client === 'mailto') {
-    if (url.length > 1900) toast('Il testo è lungo: alcuni programmi di posta lo tagliano. Se succede usa "Copia".', 'error');
+    if (url.length > 1900) toast('Il testo è lungo: alcuni programmi di posta lo tagliano. Se succede usa "Copia testo".', 'error');
     window.location.href = url;
   } else {
     window.open(url, '_blank', 'noopener');
@@ -825,13 +872,62 @@ function openMail(ev, p) {
   toast(`Mail per ${p.name} aperta. Controlla e premi Invia.`);
 }
 
+function emlFilename(ev, p) {
+  return `secret-santa-${slug(ev.name)}-${slug(p.name)}.eml`;
+}
+
+// Il generatore HTML (con immagini e font incorporati) si carica solo quando serve.
+let mailHtmlModule = null;
+async function loadMailHtml() {
+  if (!mailHtmlModule) mailHtmlModule = await import('./mail-html.js');
+  return mailHtmlModule;
+}
+
+async function downloadEml(ev, p, quiet = false) {
+  let buildEml;
+  try {
+    ({ buildEml } = await loadMailHtml());
+  } catch {
+    toast('Non riesco a preparare la mail HTML. Ricarica la pagina e riprova.', 'error');
+    return false;
+  }
+  const built = buildEml(ev, p, { fontBaseUrl: new URL('assets/fonts/', location.href).href });
+  if (!built) return false;
+  download(emlFilename(ev, p), built.eml, 'message/rfc822');
+  const m = buildMail(ev, p);
+  p.sent = { hash: mailHash(m), at: new Date().toISOString() };
+  persist(ev);
+  if (!quiet) {
+    refresh('mail');
+    toast(`Scaricata la mail per ${p.name}. Apri il file .eml, controlla e premi Invia.`);
+  }
+  return true;
+}
+
+async function downloadAllEml(ev, people) {
+  if (!people.length) return;
+  if (!confirm(`Scaricare ${people.length} file .eml? Il browser potrebbe chiederti il permesso di scaricare più file.`)) return;
+  let n = 0;
+  for (const p of people) {
+    if (await downloadEml(ev, p, true)) n++;
+    await new Promise((r) => setTimeout(r, 450));
+  }
+  refresh('mail');
+  toast(`Scaricati ${n} file .eml. Aprili uno alla volta e premi Invia.`, 'success');
+}
+
+function openPreview(ev, p) {
+  if (!p) return;
+  window.open(`anteprima.html#e=${encodeURIComponent(ev.id)}&p=${encodeURIComponent(p.id)}`, '_blank', 'noopener');
+}
+
 async function copyMail(m) {
   const text = `A: ${m.to}\nOggetto: ${m.subject}\n\n${m.body}`;
   try {
     await navigator.clipboard.writeText(text);
     toast('Mail copiata negli appunti.');
   } catch {
-    toast('Il browser non permette di copiare. Apri "Anteprima" e copia a mano.', 'error');
+    toast('Il browser non permette di copiare. Apri "Anteprima testo" e copia a mano.', 'error');
   }
 }
 

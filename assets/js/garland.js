@@ -48,7 +48,7 @@ function defs(uid) {
 }
 
 // length: lunghezza lungo la ghirlanda; thick: spessore; horizontal: striscia orizzontale.
-function buildSvg({ length, thick, horizontal, seed, uid, k, base }) {
+export function buildSvg({ length, thick, horizontal, seed, uid, k, base }) {
   const R = seeded(seed);
   const rand = (a, b) => a + R() * (b - a);
   const P = (a, c) => (horizontal ? [a, c] : [c, a]);

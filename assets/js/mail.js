@@ -26,6 +26,11 @@ export const PLACEHOLDERS = [
   ['organizzatore', "nome dell'organizzatore"],
 ];
 
+export const MAIL_FORMATS = [
+  ['text', 'Testo semplice'],
+  ['html', 'HTML decorato (file .eml)'],
+];
+
 export const CLIENTS = [
   ['mailto', 'App di posta del computer (Outlook desktop, Mail, Thunderbird)'],
   ['outlook-live', 'Outlook.com nel browser (account personale)'],
