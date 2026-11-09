@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  fill, buildMail, mailHash, mailtoUrl, outlookUrl, mailupCsv, isValidEmail, DEFAULT_SUBJECT, DEFAULT_BODY,
+  fill, buildMail, mailHash, mailtoUrl, outlookUrl, deliveryCsv, isValidEmail, DEFAULT_SUBJECT, DEFAULT_BODY,
 } from '../assets/js/mail.js';
 
 function event(overrides = {}) {
@@ -58,9 +58,9 @@ test('link mailto e Outlook codificati', () => {
   assert.ok(outlookUrl(m, 'outlook-live').startsWith('https://outlook.live.com/mail/0/deeplink/compose?'));
 });
 
-test('CSV MailUp con intestazione, virgolette e BOM', () => {
+test('CSV per mail delivery con intestazione, virgolette e BOM', () => {
   const ev = event();
-  const csv = mailupCsv(ev, ev.participants);
+  const csv = deliveryCsv(ev, ev.participants);
   assert.ok(csv.startsWith('﻿"email";"nome";"destinatario"'));
   const lines = csv.trim().split('\r\n');
   assert.equal(lines[0].split(';').length, 11);

@@ -360,3 +360,59 @@ select.input { padding-right: 28px; }
   .topbar-note { display: none; }
   .panel { padding: 16px; }
 }
+
+/* Navigazione in alto */
+.topbar-nav { display: flex; align-items: center; gap: 16px; font-size: 14px; }
+.topbar-nav a { color: var(--text); text-decoration: none; font-weight: 600; border-bottom: 2px solid transparent; padding: 2px 0; }
+.topbar-nav a:hover { border-bottom-color: var(--primary); }
+
+/* Istruzioni */
+.guide-toc ol { columns: 2; column-gap: 32px; }
+.guide-toc li { break-inside: avoid; }
+.toc-list { list-style: none; padding-left: 0; }
+.guide-section h2 { border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 14px; }
+.guide-section .plain-list { margin-bottom: 12px; }
+.guide-h3 { margin-top: 18px; }
+.guide-pre {
+  font-family: var(--mono); font-size: 13px; background: var(--surface-2);
+  padding: 12px; border-radius: var(--radius); white-space: pre-wrap; margin: 0 0 12px;
+}
+
+/* Ghirlande natalizie sui bordi */
+:root { --garland-w: 0px; }
+.garland { pointer-events: none; overflow: hidden; }
+.garland svg { display: block; }
+.garland-side { position: fixed; top: 0; bottom: 0; width: var(--garland-w); z-index: 30; }
+.garland-left { left: 0; }
+.garland-right { right: 0; transform: scaleX(-1); }
+.garland-top { position: absolute; left: 0; right: 0; top: 100%; height: 46px; z-index: 1; }
+
+.led { animation: led-pulse 3.2s ease-in-out infinite; }
+.led-b { animation-delay: -1.6s; }
+@keyframes led-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.16; }
+}
+.glint { animation: glint 4.8s ease-in-out infinite; opacity: 0.2; }
+.glint-b { animation-delay: -2.4s; }
+@keyframes glint {
+  0%, 100% { opacity: 0.15; }
+  50% { opacity: 0.95; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .led, .glint { animation: none; }
+}
+
+@media (min-width: 720px) {
+  :root { --garland-w: 64px; }
+  body { padding-left: var(--garland-w); padding-right: var(--garland-w); }
+  .toast-box { right: calc(var(--garland-w) + 16px); left: calc(var(--garland-w) + 16px); }
+}
+@media (min-width: 1100px) {
+  :root { --garland-w: 110px; }
+}
+@media (max-width: 719px) {
+  main { padding-top: 64px; }
+  .topbar-nav { gap: 12px; }
+  .guide-toc ol { columns: 1; }
+}

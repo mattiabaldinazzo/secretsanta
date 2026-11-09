@@ -1,63 +1,219 @@
 # Secret Santa
 
-Sito statico per organizzare uno scambio di regali Secret Santa. Gira su GitHub Pages, senza server, database o account.
+Sito per organizzare uno scambio di regali Secret Santa: estrazione, esclusioni, aggiunte dell'ultimo minuto, modifica manuale degli abbinamenti e invio delle mail dal tuo account.
 
-## Cosa fa
+È un sito statico su GitHub Pages. Non ha server, database o account. Nomi, email e abbinamenti restano solo nel browser di chi organizza.
 
-- **Estrazione** in un unico giro (A regala a B, B a C, ... fino a tornare ad A): nessuna coppia si scambia il regalo e non ci sono gruppi chiusi. Se le esclusioni rendono impossibile un giro unico, usa più giri.
-- **Esclusioni** a coppie: due persone non si pescano a vicenda.
-- **Aggiunte dell'ultimo minuto** dopo l'estrazione: la persona nuova entra nel giro esistente. Se G regalava a R, ora G regala al nuovo arrivato e il nuovo arrivato regala a R. Le mail da rifare sono solo 2: quella di G e quella del nuovo arrivato. Puoi indicare subito un partner da escludere.
-- **Rimozioni dell'ultimo minuto**: chi regalava alla persona che esce prende il suo destinatario. Cambia una sola mail, al massimo due se serve rispettare le esclusioni.
-- **Modifica manuale degli abbinamenti** per l'admin. Il sito controlla che ognuno faccia un solo regalo e ne riceva uno solo, e segnala esclusioni violate e coppie che si scambiano il regalo.
-- **Invio mail** dal tuo account, con la conferma di invio sempre a mano:
-  - app di posta del computer (link `mailto:`, per esempio Outlook desktop);
-  - Outlook.com o Outlook Microsoft 365 nel browser, con la mail già compilata;
-  - CSV da importare in MailUp.
-- **Stato di ogni mail**: da inviare, da aggiornare (il testo è cambiato dopo l'invio, per esempio per un'aggiunta o una modifica) oppure inviata.
-- **Backup** su file, anche cifrato con password (AES-256-GCM, chiave PBKDF2).
+**Sito:** https://mattiabaldinazzo.github.io/secretsanta/
 
-## Privacy: perché è sicuro su un repository pubblico
+![Pagina di un evento](docs/screenshot-evento.png)
 
-- Nel repository c'è solo codice. Nomi, email e abbinamenti non vengono mai salvati su GitHub.
-- I dati restano nel `localStorage` del browser dell'admin. Per spostarli usi il backup su file.
-- Il sito non fa richieste di rete. La Content Security Policy blocca ogni connessione (`connect-src 'none'`), quindi niente analytics né tracciamento.
-- Le mail partono dal tuo account di posta. Il sito prepara solo il testo.
-- Le pagine hanno `noindex` e non mandano il referrer.
+## Indice
 
-Limite da sapere: chi apre il sito su un altro browser trova la pagina vuota, perché ogni browser ha i suoi dati. È voluto.
+- [Funzioni](#funzioni)
+- [Come si usa](#come-si-usa)
+- [Come funziona l'estrazione](#come-funziona-lestrazione)
+- [Aggiunte e rimozioni dell'ultimo minuto](#aggiunte-e-rimozioni-dellultimo-minuto)
+- [Invio delle mail](#invio-delle-mail)
+- [Privacy e sicurezza](#privacy-e-sicurezza)
+- [Pubblicazione su GitHub Pages](#pubblicazione-su-github-pages)
+- [Sviluppo](#sviluppo)
+- [Struttura del progetto](#struttura-del-progetto)
+- [Decorazioni](#decorazioni)
+- [Limiti noti](#limiti-noti)
 
-## Pubblicare su GitHub Pages
+## Funzioni
 
-1. Porta il codice sul branch `main` (merge della pull request).
-2. Su GitHub apri **Settings > Pages**.
-3. In **Build and deployment** scegli **Deploy from a branch**, poi `main` e la cartella `/ (root)`, e salva.
+| Funzione | Cosa fa |
+| --- | --- |
+| Estrazione | Crea un unico giro in cui ognuno fa un regalo e ne riceve uno. Nessuna coppia si scambia il regalo. |
+| Esclusioni | Due persone non si pescano a vicenda (partner, familiari, colleghi). |
+| Aggiunte dell'ultimo minuto | La persona nuova entra nel giro già estratto. Va rifatta una sola mail esistente. |
+| Rimozioni dell'ultimo minuto | Il giro si ricollega da solo. Va rifatta una sola mail, al massimo due. |
+| Modifica manuale | L'admin cambia gli abbinamenti e il sito controlla in tempo reale che siano validi. |
+| Invio mail | Programma di posta del computer, Outlook.com, Outlook Microsoft 365 oppure CSV per uno strumento di mail delivery. |
+| Stato delle mail | Da inviare, da aggiornare, inviata. Il sito sa quali mail sono cambiate dopo l'invio. |
+| Testo personalizzabile | Oggetto e testo con segnaposto: `{nome}`, `{destinatario}`, `{evento}`, `{data}`, `{luogo}`, `{budget}`, `{messaggio}`, `{organizzatore}`. |
+| Backup | File JSON, anche cifrato con password (AES-256-GCM). Serve per cambiare computer o browser. |
+| Istruzioni | Guida completa dentro il sito, nella pagina "Istruzioni". |
+
+## Come si usa
+
+La guida completa è nella pagina **Istruzioni** del sito. In sintesi:
+
+1. **Nuovo evento.** Compila nome, organizzatore, data, luogo, budget e messaggio. Tutti i campi sono facoltativi e si salvano da soli.
+2. **Partecipanti.** Aggiungili uno alla volta oppure incolla una lista, una persona per riga:
+   ```
+   Mario Rossi; mario@esempio.it
+   Giulia Bianchi <giulia@esempio.it>
+   Luca, luca@esempio.it
+   ```
+   Servono almeno 3 persone e ogni nome deve essere unico.
+3. **Esclusioni.** Scegli due persone e clicca "Non si pescano".
+4. **Estrazione.** Clicca "Fai l'estrazione". Gli abbinamenti restano nascosti finché non clicchi "Mostra abbinamenti".
+5. **Mail.** Scegli come inviare e clicca "Apri la prossima" per ogni persona, oppure esporta il CSV.
+6. **Backup.** Scaricalo subito dopo l'estrazione.
+
+![Abbinamenti e invio mail](docs/screenshot-mail.png)
+
+## Come funziona l'estrazione
+
+Il codice è in `assets/js/draw.js`.
+
+1. **Giro unico.** Una ricerca con backtracking costruisce un ciclo che tocca tutti i partecipanti: A regala a B, B a C, e così via fino a tornare ad A. L'ordine è casuale e le esclusioni vengono rispettate. Per evitare blocchi con molti vincoli la ricerca si ferma dopo 200.000 passi.
+2. **Ripiego.** Se un giro unico è impossibile, un abbinamento bipartito (algoritmo di Kuhn, con ordine casuale) trova una soluzione valida con più giri, se esiste. Il sito avvisa che i giri sono più di uno.
+3. **Nessuna soluzione.** Se nemmeno il ripiego trova una soluzione, il sito chiede di togliere qualche esclusione.
+
+La casualità viene da `crypto.getRandomValues`, il generatore crittografico del browser.
+
+Perché un giro unico:
+
+- nessuna coppia si fa il regalo a vicenda;
+- non ci sono gruppetti chiusi, quindi un'aggiunta o una rimozione tocca pochissime persone.
+
+Prima di salvare una modifica manuale, la validazione controlla:
+
+- **Errori** (bloccano il salvataggio): regalo a se stessi, persona che riceve due regali, persona senza destinatario o senza regalo.
+- **Avvisi** (richiedono una conferma): esclusione violata, coppia che si scambia il regalo.
+
+## Aggiunte e rimozioni dell'ultimo minuto
+
+**Aggiunta.** Il sito sceglie a caso una persona G il cui abbinamento può essere spezzato rispettando le esclusioni. Se G regalava a R:
+
+```
+prima:  G -> R
+dopo:   G -> Nuovo -> R
+```
+
+Va inviata la mail del nuovo arrivato e va aggiornata solo quella di G. Tutti gli altri abbinamenti restano invariati e il giro resta unico.
+
+**Rimozione.** Se G regalava alla persona X che esce, e X regalava a R:
+
+```
+prima:  G -> X -> R
+dopo:   G -> R
+```
+
+Se G non può regalare a R per un'esclusione, G prende il destinatario di un'altra persona H, e H regala a R. In quel caso cambiano 2 mail.
+
+Se il sito non trova una soluzione, lascia la persona senza abbinamento e chiede di correggere a mano o rifare l'estrazione.
+
+## Invio delle mail
+
+Il sito non invia mail da solo: non ha un server. Prepara ogni mail e la apre nel programma che scegli. Sei tu a premere Invia.
+
+| Modalità | Come funziona |
+| --- | --- |
+| App di posta del computer | Link `mailto:`. Si apre il programma predefinito (Outlook desktop, Mail, Thunderbird) con destinatario, oggetto e testo compilati. |
+| Outlook.com | Si apre `outlook.live.com` in una nuova scheda con la mail compilata. Per account personali. |
+| Outlook Microsoft 365 | Si apre `outlook.office.com` con la mail compilata. Per account di lavoro o scuola. |
+| Strumento di mail delivery | Esporti un CSV e lo importi in qualsiasi servizio per newsletter o invii massivi. |
+
+### Stato delle mail
+
+Quando apri una mail il sito salva un'impronta (hash) del testo. Se dopo l'invio cambia qualcosa (destinatario, data, luogo, testo), l'impronta non corrisponde più e la mail diventa **da aggiornare**. Così, dopo un'aggiunta all'ultimo minuto, vedi subito le 2 mail da inviare.
+
+### CSV per strumenti di mail delivery
+
+- Codifica UTF-8 con BOM, separatore punto e virgola, tutti i campi tra virgolette.
+- Una riga per partecipante.
+- Puoi esportare solo le mail da inviare o aggiornare, oppure tutte.
+
+| Colonna | Contenuto |
+| --- | --- |
+| `email` | indirizzo del partecipante |
+| `nome` | nome del partecipante |
+| `destinatario` | persona a cui fa il regalo |
+| `evento`, `data`, `luogo`, `budget`, `messaggio`, `organizzatore` | dettagli dell'evento |
+| `oggetto` | oggetto già completo |
+| `testo` | testo della mail già completo |
+
+Nello strumento hai due strade:
+
+- collegare le colonne ai campi personalizzati e usarli nel modello della mail;
+- usare direttamente le colonne `oggetto` e `testo`.
+
+Il CSV contiene gli abbinamenti in chiaro: cancellalo dopo l'invio, dal computer e dallo strumento.
+
+## Privacy e sicurezza
+
+| Rischio | Protezione |
+| --- | --- |
+| Dati dei partecipanti pubblici su GitHub | Il repository contiene solo codice. I dati vivono nel `localStorage` del browser. Il `.gitignore` esclude anche CSV e backup. |
+| Dati inviati a server esterni | La Content Security Policy (`connect-src 'none'`, `default-src 'none'`) impedisce al sito qualsiasi richiesta di rete. |
+| Tracciamento | Niente analytics, cookie, font o script esterni. |
+| Indicizzazione | `noindex, nofollow` e nessun referrer inviato. |
+| Furto del backup | Backup facoltativamente cifrato: AES-256-GCM con chiave derivata da PBKDF2-SHA-256 (310.000 iterazioni). |
+| Codice malevolo nei dati | L'interfaccia inserisce i dati solo come testo, mai come HTML. |
+| L'organizzatore vede gli abbinamenti | Sono nascosti di default. Chi organizza e partecipa non deve cliccare "Mostra abbinamenti". |
+
+Da sapere: chi apre il sito su un altro browser non vede nulla, perché ogni browser ha i suoi dati. È voluto. Per spostare un evento usa il backup.
+
+## Pubblicazione su GitHub Pages
+
+Il sito non richiede build: GitHub Pages serve i file così come sono.
+
+1. Apri **Settings > Pages** nel repository.
+2. In **Build and deployment** scegli **Source: Deploy from a branch**.
+3. Seleziona il branch `main` e la cartella `/ (root)`, poi clicca **Save**.
 4. Dopo circa un minuto il sito è online su `https://mattiabaldinazzo.github.io/secretsanta/`.
 
-## Usare MailUp
-
-1. Nella sezione **Invio mail** clicca **CSV MailUp: solo da inviare** oppure **tutte**.
-2. In MailUp importa il file come lista di destinatari. Il separatore è il punto e virgola, la codifica UTF-8.
-3. Collega le colonne (`nome`, `destinatario`, `evento`, `data`, `luogo`, `budget`, `messaggio`, `organizzatore`, `oggetto`, `testo`) ai campi personalizzati del tuo account.
-4. Nel messaggio usa i campi dinamici di MailUp al posto dei segnaposto, almeno `destinatario`.
-5. Dopo il download il sito ti chiede se segnare quelle mail come inviate.
-
-Il CSV contiene gli abbinamenti in chiaro. Cancellalo dopo l'importazione.
+Ogni push su `main` aggiorna il sito automaticamente. Il file `.nojekyll` disattiva Jekyll, quindi tutti i file vengono pubblicati così come sono.
 
 ## Sviluppo
 
+Servono Node 20 o superiore (solo per i test) e Python 3 (per il server locale).
+
 ```
-npm test      # test della logica (Node 20 o superiore)
-npm start     # server locale su http://localhost:8080
+npm test     # 22 test della logica con node --test
+npm start    # server locale su http://localhost:8080
 ```
 
-Serve un server locale, perché i moduli JavaScript non funzionano aprendo `index.html` come file.
+Serve un server locale: i moduli JavaScript non funzionano aprendo `index.html` come file.
 
-Struttura:
+GitHub Actions esegue i test a ogni push (`.github/workflows/test.yml`).
 
-- `index.html`: pagina unica
-- `assets/style.css`: stile (colore primario `#CC0000`, tema chiaro e scuro)
-- `assets/js/draw.js`: estrazione, controlli, aggiunte e rimozioni
-- `assets/js/mail.js`: testo delle mail, link mailto e Outlook, CSV MailUp
-- `assets/js/store.js`: salvataggio locale e backup cifrato
-- `assets/js/app.js`: interfaccia
-- `tests/`: test con `node --test`
+## Struttura del progetto
+
+```
+index.html               pagina unica, con la Content Security Policy
+assets/style.css         stile: colore primario #CC0000, tema chiaro e scuro, ghirlande
+assets/js/app.js         interfaccia: home, evento, routing
+assets/js/draw.js        estrazione, validazione, aggiunte e rimozioni
+assets/js/mail.js        testo delle mail, link mailto e Outlook, CSV
+assets/js/store.js       salvataggio locale, backup e cifratura
+assets/js/guide.js       pagina Istruzioni
+assets/js/garland.js     ghirlande natalizie in SVG
+tests/                   test con node --test
+docs/                    screenshot per questo README
+```
+
+Non ci sono dipendenze esterne e nessun passaggio di build.
+
+## Decorazioni
+
+I bordi verticali della pagina hanno ghirlande di pino disegnate in SVG da `assets/js/garland.js`:
+
+- rami di pino su tre livelli di profondità;
+- fiocchi di velluto rosso `#CC0000`;
+- stalattiti e stelle di cristallo;
+- lucine LED a luce calda, in due gruppi che si alternano con un ritmo costante di 3,2 secondi.
+
+Il disegno usa numeri casuali a seme fisso, quindi è sempre uguale. Si adatta allo schermo:
+
+| Larghezza schermo | Ghirlanda |
+| --- | --- |
+| 1100 px e oltre | 110 px per lato |
+| 720 - 1099 px | 64 px per lato |
+| sotto 720 px (telefono) | striscia orizzontale sotto l'intestazione |
+
+Chi ha attivato "riduci movimento" nel sistema operativo vede le luci accese fisse.
+
+![Versione telefono](docs/screenshot-telefono.png)
+
+## Limiti noti
+
+- **Niente lista dei desideri né messaggi anonimi.** Servirebbe un database condiviso tra i partecipanti, in contrasto con l'obiettivo di non avere server.
+- **Link mailto lunghi.** Alcuni programmi di posta tagliano i link molto lunghi. Il sito avvisa sopra i 1900 caratteri, e "Copia" resta sempre disponibile.
+- **Link di compilazione di Outlook sul web.** Microsoft non li documenta in modo ufficiale e potrebbe cambiarli.
+- **Stato "inviata".** Il sito segna la mail come inviata quando la apri, perché non può sapere se hai premuto Invia. Se non la invii, usa "Segna da inviare".

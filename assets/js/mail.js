@@ -1,4 +1,4 @@
-// Preparazione delle mail: testo dal modello, link mailto e Outlook, CSV per MailUp.
+// Preparazione delle mail: testo dal modello, link mailto e Outlook, CSV per strumenti di mail delivery.
 
 export const DEFAULT_SUBJECT = '{evento}: ecco a chi fai il regalo';
 
@@ -111,9 +111,9 @@ export function composeUrl(m, client) {
 
 const csvCell = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
 
-// CSV per l'importazione dei destinatari in MailUp: una riga per persona,
+// CSV per l'importazione dei destinatari in uno strumento di mail delivery: una riga per persona,
 // separatore punto e virgola, UTF-8 con BOM (si apre bene anche in Excel).
-export function mailupCsv(ev, people) {
+export function deliveryCsv(ev, people) {
   const rows = [['email', 'nome', 'destinatario', 'evento', 'data', 'luogo', 'budget', 'messaggio', 'organizzatore', 'oggetto', 'testo']];
   for (const p of people) {
     const m = buildMail(ev, p);

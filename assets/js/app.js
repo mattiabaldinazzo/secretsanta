@@ -2,9 +2,11 @@
 import { draw, countCycles, validateAssignments, insertParticipant, removeFromAssignments } from './draw.js';
 import {
   DEFAULT_SUBJECT, DEFAULT_BODY, PLACEHOLDERS, CLIENTS,
-  buildMail, mailHash, composeUrl, mailupCsv, isValidEmail, formatDate,
+  buildMail, mailHash, composeUrl, deliveryCsv, isValidEmail, formatDate,
 } from './mail.js';
 import { loadEvents, saveEvents, blankEvent, newId, exportBackup, parseBackup, decryptBackup } from './store.js';
+import { renderGuide } from './guide.js';
+import { initGarlands } from './garland.js';
 
 const app = document.getElementById('app');
 const toastBox = document.getElementById('toast');
@@ -101,6 +103,13 @@ function route() {
   ui.editing = null;
   ui.reveal = false;
   ui.pendingImport = null;
+  if (location.hash.startsWith('#/istruzioni')) {
+    ctx = null;
+    document.title = 'Istruzioni - Secret Santa';
+    app.replaceChildren(...renderGuide(h).flat(Infinity).filter(Boolean));
+    window.scrollTo(0, 0);
+    return;
+  }
   const m = location.hash.match(/^#\/evento\/([\w-]+)/);
   if (m) {
     const ev = events.find((e) => e.id === m[1]);
@@ -129,7 +138,8 @@ function renderHome() {
       h('p', { class: 'lead' },
         "Aggiungi i partecipanti, fai l'estrazione e manda a ognuno una mail con il nome della persona a cui fare il regalo. Puoi aggiungere persone anche dopo l'estrazione."),
       h('div', { class: 'actions' },
-        h('button', { class: 'btn btn-primary btn-large', type: 'button', onclick: onNewEvent }, 'Nuovo evento'))),
+        h('button', { class: 'btn btn-primary btn-large', type: 'button', onclick: onNewEvent }, 'Nuovo evento'),
+        h('a', { class: 'btn btn-large', href: '#/istruzioni' }, 'Come funziona'))),
     h('section', { class: 'panel' },
       h('h2', {}, 'I tuoi eventi'),
       sorted.length
@@ -774,9 +784,9 @@ function renderMailList(ev) {
         class: 'btn btn-primary', type: 'button', disabled: !todo.length,
         onclick: () => openMail(ev, todo[0].p),
       }, todo.length ? `Apri la prossima: ${todo[0].p.name}` : 'Tutte le mail risultano inviate'),
-      h('button', { class: 'btn', type: 'button', disabled: !todo.length, onclick: () => exportCsv(ev, todo.map((x) => x.p)) }, 'CSV MailUp: solo da inviare'),
-      h('button', { class: 'btn', type: 'button', onclick: () => exportCsv(ev, states.filter((x) => x.state !== 'none').map((x) => x.p)) }, 'CSV MailUp: tutte')),
-    h('p', { class: 'field-hint' }, 'Quando apri una mail il sito la segna come inviata. Se poi non la invii, usa "Segna da inviare".'),
+      h('button', { class: 'btn', type: 'button', disabled: !todo.length, onclick: () => exportCsv(ev, todo.map((x) => x.p)) }, 'Esporta CSV: solo da inviare'),
+      h('button', { class: 'btn', type: 'button', onclick: () => exportCsv(ev, states.filter((x) => x.state !== 'none').map((x) => x.p)) }, 'Esporta CSV: tutte')),
+    h('p', { class: 'field-hint' }, 'Quando apri una mail il sito la segna come inviata. Se poi non la invii, usa "Segna da inviare". Il CSV serve per inviare tutte le mail insieme da uno strumento di mail delivery: una riga per persona, con destinatario e testo già pronti.'),
     h('ul', { class: 'mail-list' }, states.map(({ p, state }) => mailRow(ev, p, state))),
   ];
 }
@@ -827,7 +837,7 @@ async function copyMail(m) {
 
 function exportCsv(ev, people) {
   if (!people.length) return;
-  download(`mailup-${slug(ev.name)}-${today()}.csv`, mailupCsv(ev, people), 'text/csv;charset=utf-8');
+  download(`mail-delivery-${slug(ev.name)}-${today()}.csv`, deliveryCsv(ev, people), 'text/csv;charset=utf-8');
   if (confirm(`Scaricato il CSV con ${people.length} ${people.length === 1 ? 'destinatario' : 'destinatari'}. Segnare queste mail come inviate?`)) {
     for (const p of people) {
       const m = buildMail(ev, p);
@@ -907,3 +917,4 @@ window.addEventListener('storage', (e) => {
 });
 
 route();
+initGarlands();
